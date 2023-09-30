@@ -24,9 +24,9 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         
-        const courseCollection = client.db('Decabo').collection('courses')
+        const courseCollection = client.db('Decabo').collection('course')
 
-        const serchCollection = client.db('Decabo').collection('courses')
+        const serchCollection = client.db('Decabo').collection('course')
         app.get('/getcourseId/:id')
 
         const indexKeys = { title: 1, category: 1 };
