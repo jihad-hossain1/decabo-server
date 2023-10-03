@@ -25,6 +25,7 @@ async function run() {
     try {
         
         const courseCollection = client.db('Decabo').collection('course')
+        const courseCommentCollection = client.db('Decabo').collection('courseComment')
 
         const serchCollection = client.db('Decabo').collection('course')
         app.get('/getcourseId/:id')
@@ -97,7 +98,21 @@ async function run() {
             console.log(result);
             res.send(result)
         })
-       
+        app.post("/comments", async (req, res) => {
+            const doc = req.body;
+            const result = await courseCommentCollection.insertOne(doc);
+            res.send(result);
+        });
+        app.get("/comments", async (req, res) => {
+            const result = await courseCommentCollection.find().toArray();
+            res.send(result);
+        });
+        app.get('/comments/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await courseCommentCollection.find(id)
+            res.send(result)
+        })
+        //  co
  
         
         await client.db("admin").command({ ping: 1 });
