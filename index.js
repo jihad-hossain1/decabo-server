@@ -98,6 +98,7 @@ async function run() {
             console.log(result);
             res.send(result)
         })
+        //comments api
         app.post("/comments", async (req, res) => {
             const doc = req.body;
             const result = await courseCommentCollection.insertOne(doc);
@@ -112,6 +113,24 @@ async function run() {
             const result = await courseCommentCollection.find(id)
             res.send(result)
         })
+        app.put('/comments/:id', async (req, res) => {
+            const id = req.params.id;
+            const item = req.body
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: item,
+            }
+            const result = await courseCommentCollection.updateOne(filter, updateDoc, options)
+            // console.log(result);
+            res.send(result)
+        })
+        app.delete("/comments/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await courseCommentCollection.deleteOne(query);
+            res.send(result);
+        });
         //  co
  
         
