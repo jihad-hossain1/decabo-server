@@ -25,6 +25,8 @@ async function run() {
     try {
         
         const courseCollection = client.db('Decabo').collection('course')
+        const enrollCollection = client.db('Decabo').collection('enroll')
+        const enrollDeleteCollection = client.db('Decabo').collection('enroll')
         const courseCommentCollection = client.db('Decabo').collection('courseComment')
 
         const serchCollection = client.db('Decabo').collection('course')
@@ -131,8 +133,29 @@ async function run() {
             const result = await courseCommentCollection.deleteOne(query);
             res.send(result);
         });
-        //  co
- 
+        //  Enrolled Course api
+        app.get('/enroll/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await enrollCollection.findOne(query)
+            res.send(result)
+        })
+        app.post("/enroll", async (req, res) => {
+            const doc = req.body;
+            const result = await enrollCollection.insertOne(doc);
+            res.send(result);
+        });
+        app.get("/enroll", async (req, res) => {
+            const result = await enrollCollection.find().toArray();
+            res.send(result);
+        });
+        app.delete("/enroll/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await enrollDeleteCollection.deleteOne(query);
+            console.log(result);
+            res.send(result);
+        });
         
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
