@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express()
 const port = process.env.PORT || 5000;
 require('dotenv').config();
-
+const stripe = require('stripe')(process.env.STRIPE_KEY)
 // middleware 
 app.use(cors())
 app.use(express.json())
@@ -27,6 +27,7 @@ async function run() {
         const courseCollection = client.db('Decabo').collection('course')
         const enrollCollection = client.db('Decabo').collection('enroll')
         const enrollDeleteCollection = client.db('Decabo').collection('enroll')
+        const paymentedCollection = client.db('Decabo').collection('paymented')
         const courseCommentCollection = client.db('Decabo').collection('courseComment')
 
         const serchCollection = client.db('Decabo').collection('course')
@@ -45,6 +46,36 @@ async function run() {
                     ],
                 })
                 .toArray();
+            res.send(result);
+        });
+
+        // payment api 
+        app.post("/create-payment-intent", async (req, res) => {
+            const { price } = req.body;
+            if (price) {
+                const amount = parseFloat(price) * 100
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount,
+                    currency: "usd",
+                    payment_method_types: ['card'],
+                });
+                res.send({
+                    clientSecret: paymentIntent.client_secret,
+                });
+
+            }
+        });
+         // booking info 
+         app.post("/coursepayinfo", async (req, res) => {
+            const doc = req.body;
+            const result = await paymentedCollection.insertOne(doc);
+            res.send(result);
+        });
+        // get success booking info
+        app.get("/coursepayinfo", async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const result = await paymentedCollection.find(query).toArray();
             res.send(result);
         });
         app.get('/courseByEmail', async (req, res) => {
@@ -156,6 +187,14 @@ async function run() {
             console.log(result);
             res.send(result);
         });
+        app.delete("/carts_remove/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await enrollCollection.deleteOne(query);
+            console.log(result);
+            res.send(result);
+        });
+        
         app.get("/carts", async (req, res) => {
             const email = req.query.email;
             const query = { email: email };
