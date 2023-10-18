@@ -28,180 +28,201 @@ async function run() {
         const enrollCollection = client.db('Decabo').collection('enroll')
         const enrollDeleteCollection = client.db('Decabo').collection('enroll')
         const paymentedCollection = client.db('Decabo').collection('paymented')
-        const courseCommentCollection = client.db('Decabo').collection('courseComment')
+        const favoriteCollection = client.db("Decabo").collection("favorite");
+        const courseCommentCollection = client
+          .db("Decabo")
+          .collection("courseComment");
 
-        const serchCollection = client.db('Decabo').collection('course')
-        app.get('/getcourseId/:id')
+        const serchCollection = client.db("Decabo").collection("course");
+        app.get("/getcourseId/:id");
 
         const indexKeys = { title: 1, category: 1 };
         const indexOptions = { category: "titleCategory" };
         app.get("/getcourseText/:text", async (req, res) => {
-            const text = req.params.text;
-            const result = await serchCollection
-                .find({
-                    $or: [
-                        { title: { $regex: text, $options: "i" } },
-                        { category: { $regex: text, $options: "i" } },
-                        { date: { $regex: text, $options: "i" } },
-                    ],
-                })
-                .toArray();
-            res.send(result);
+          const text = req.params.text;
+          const result = await serchCollection
+            .find({
+              $or: [
+                { title: { $regex: text, $options: "i" } },
+                { category: { $regex: text, $options: "i" } },
+                { date: { $regex: text, $options: "i" } },
+              ],
+            })
+            .toArray();
+          res.send(result);
         });
 
-        // payment api 
+        // payment api
         app.post("/create-payment-intent", async (req, res) => {
-            const { price } = req.body;
-            if (price) {
-                const amount = parseFloat(price) * 100
-                const paymentIntent = await stripe.paymentIntents.create({
-                    amount: amount,
-                    currency: "usd",
-                    payment_method_types: ['card'],
-                });
-                res.send({
-                    clientSecret: paymentIntent.client_secret,
-                });
-
-            }
+          const { price } = req.body;
+          if (price) {
+            const amount = parseFloat(price) * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+              amount: amount,
+              currency: "usd",
+              payment_method_types: ["card"],
+            });
+            res.send({
+              clientSecret: paymentIntent.client_secret,
+            });
+          }
         });
-         // booking info 
-         app.post("/coursepayinfo", async (req, res) => {
-            const doc = req.body;
-            const result = await paymentedCollection.insertOne(doc);
-            res.send(result);
+        // booking info
+        app.post("/coursepayinfo", async (req, res) => {
+          const doc = req.body;
+          const result = await paymentedCollection.insertOne(doc);
+          res.send(result);
         });
         // get success booking info
         app.get("/coursepayinfo", async (req, res) => {
-            const email = req.query.email;
-            const query = { email: email };
-            const result = await paymentedCollection.find(query).toArray();
-            res.send(result);
+          const email = req.query.email;
+          const query = { email: email };
+          const result = await paymentedCollection.find(query).toArray();
+          res.send(result);
         });
-        app.get('/courseByEmail', async (req, res) => {
-            let query = {};
-            if (req.query?.email) {
-                query = { email: req.query.email }
-            }
-            const result = await courseCollection.find(query).toArray();
-            res.send(result)
-        })
+        app.get("/courseByEmail", async (req, res) => {
+          let query = {};
+          if (req.query?.email) {
+            query = { email: req.query.email };
+          }
+          const result = await courseCollection.find(query).toArray();
+          res.send(result);
+        });
         app.post("/course", async (req, res) => {
-            const doc = req.body;
-            const result = await courseCollection.insertOne(doc);
-            res.send(result);
+          const doc = req.body;
+          const result = await courseCollection.insertOne(doc);
+          res.send(result);
         });
         //  collection api
         app.get("/course", async (req, res) => {
-            const result = await courseCollection.find().toArray();
-            res.send(result);
+          const result = await courseCollection.find().toArray();
+          res.send(result);
         });
-        // add a 
+        // add a
 
-        // get a single 
-        app.get('/course/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await courseCollection.findOne(query)
-            res.send(result)
-        })
-        app.get('/course/:email', async (req, res) => {
-            const email = req.params.email;
-            // const query = { _id: new ObjectId(id) }
-            const result = await courseCollection.find(email)
-            res.send(result)
-        })
+        // get a single
+        app.get("/course/:id", async (req, res) => {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await courseCollection.findOne(query);
+          res.send(result);
+        });
+        app.get("/course/:email", async (req, res) => {
+          const email = req.params.email;
+          // const query = { _id: new ObjectId(id) }
+          const result = await courseCollection.find(email);
+          res.send(result);
+        });
         // all geting card delete one by one
         app.delete("/course/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await courseCollection.deleteOne(query);
-            res.send(result);
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await courseCollection.deleteOne(query);
+          res.send(result);
         });
 
-        app.put('/course/:id', async (req, res) => {
-            const id = req.params.id;
-            const item = req.body
-            const filter = { _id: new ObjectId(id) };
-            const options = { upsert: true }
-            const updateDoc = {
-                $set: item,
-            }
-            const result = await courseCollection.updateOne(filter, updateDoc, options)
-            console.log(result);
-            res.send(result)
-        })
+        app.put("/course/:id", async (req, res) => {
+          const id = req.params.id;
+          const item = req.body;
+          const filter = { _id: new ObjectId(id) };
+          const options = { upsert: true };
+          const updateDoc = {
+            $set: item,
+          };
+          const result = await courseCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          console.log(result);
+          res.send(result);
+        });
         //comments api
         app.post("/comments", async (req, res) => {
-            const doc = req.body;
-            const result = await courseCommentCollection.insertOne(doc);
-            res.send(result);
+          const doc = req.body;
+          const result = await courseCommentCollection.insertOne(doc);
+          res.send(result);
         });
         app.get("/comments", async (req, res) => {
-            const result = await courseCommentCollection.find().toArray();
-            res.send(result);
+          const result = await courseCommentCollection.find().toArray();
+          res.send(result);
         });
-        app.get('/comments/:id', async (req, res) => {
-            const id = req.params.id;
-            const result = await courseCommentCollection.find(id)
-            res.send(result)
-        })
-        app.put('/comments/:id', async (req, res) => {
-            const id = req.params.id;
-            const item = req.body
-            const filter = { _id: new ObjectId(id) };
-            const options = { upsert: true }
-            const updateDoc = {
-                $set: item,
-            }
-            const result = await courseCommentCollection.updateOne(filter, updateDoc, options)
-            // console.log(result);
-            res.send(result)
-        })
+        app.get("/comments/:id", async (req, res) => {
+          const id = req.params.id;
+          const result = await courseCommentCollection.find(id);
+          res.send(result);
+        });
+        app.put("/comments/:id", async (req, res) => {
+          const id = req.params.id;
+          const item = req.body;
+          const filter = { _id: new ObjectId(id) };
+          const options = { upsert: true };
+          const updateDoc = {
+            $set: item,
+          };
+          const result = await courseCommentCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+          );
+          // console.log(result);
+          res.send(result);
+        });
         app.delete("/comments/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await courseCommentCollection.deleteOne(query);
-            res.send(result);
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await courseCommentCollection.deleteOne(query);
+          res.send(result);
         });
         //  Enrolled Course api
-        app.get('/enroll/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await enrollCollection.findOne(query)
-            res.send(result)
-        })
+        app.get("/enroll/:id", async (req, res) => {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await enrollCollection.findOne(query);
+          res.send(result);
+        });
         app.post("/enroll", async (req, res) => {
-            const doc = req.body;
-            const result = await enrollCollection.insertOne(doc);
-            res.send(result);
+          const doc = req.body;
+          const result = await enrollCollection.insertOne(doc);
+          res.send(result);
         });
         app.get("/enroll", async (req, res) => {
-            const result = await enrollCollection.find().toArray();
-            res.send(result);
+          const result = await enrollCollection.find().toArray();
+          res.send(result);
         });
         app.delete("/enroll/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await enrollDeleteCollection.deleteOne(query);
-            console.log(result);
-            res.send(result);
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await enrollDeleteCollection.deleteOne(query);
+          console.log(result);
+          res.send(result);
         });
         app.delete("/carts_remove/:id", async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            const result = await enrollCollection.deleteOne(query);
-            console.log(result);
-            res.send(result);
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await enrollCollection.deleteOne(query);
+          console.log(result);
+          res.send(result);
         });
-        
+
         app.get("/carts", async (req, res) => {
-            const email = req.query.email;
-            const query = { email: email };
-            const result = await enrollCollection.find(query).toArray();
-            res.send(result);
+          const email = req.query.email;
+          const query = { email: email };
+          const result = await enrollCollection.find(query).toArray();
+          res.send(result);
         });
-        
+        //favorite course api
+        app.post("/favorite", async (req, res) => {
+          const doc = req.body;
+          const result = await favoriteCollection.insertOne(doc);
+          res.send(result);
+        });
+        app.get("/favorite", async (req, res) => {
+          const email = req.query.email;
+          const query = { email: email };
+          const result = await favoriteCollection.find(query).toArray();
+          res.send(result);
+        });
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
