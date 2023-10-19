@@ -80,6 +80,14 @@ async function run() {
           const result = await paymentedCollection.find(query).toArray();
           res.send(result);
         });
+      app.delete("/coursepayinfo/:id", async (req, res) => {
+          const id = req.params.id;
+          const query = { _id: new ObjectId(id) };
+          const result = await paymentedCollection.deleteOne(query);
+          res.send(result);
+      });
+      
+
         app.get("/courseByEmail", async (req, res) => {
           let query = {};
           if (req.query?.email) {
